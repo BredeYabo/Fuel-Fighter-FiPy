@@ -1,37 +1,16 @@
-# main.py -- put your code here!
-#Edited by Sebastian
-#"execfile('/flash/file.py')" To run "file.py"m
-#execfile('/flash/CTA.py')#Temp Disabled, but works (it connects to my android WiFi hotspot)
-#execfile('/flash/RGBPARTY.py')
-from startiot import Startiot
-import pycom
-import time
-pycom.heartbeat(False) # disable the blue blinking
-iot = Startiot()
-
-pycom.rgbled(0xFF0000)
-iot.connect()
-pycom.rgbled(0x0000FF)
-
-count = 0
-while True:
-  print("Send data...",  count)
-  data = "Fuel Fighter Signal Test: %s" % (count)
-  count = count + 1
-
-  # send some data
-  iot.send(data)
-  pycom.rgbled(0x00ff00)
-  time.sleep(0.1)
-  pycom.rgbled(0x000000)
-  time.sleep(0.1)
-  pycom.rgbled(0x00ff00)
-  time.sleep(0.1)
-  pycom.rgbled(0x000000)
-  print("Sending data done...")
-
-  # get any data received
-  data = iot.recv(64)
-  print("Received Data:",  data)
-
-  time.sleep(5)
+#by Sebastian Kleivenes
+print("\n"*3+"Hi, we are up and running!\n")
+print("Current status: LoPy unstable; GPS not working")
+choice=input("What would you like to do?"+"\n"*3+"1. Send a custom message over LoPy\n2. Send GPS coordinates over LoPy\n3. Test for GPS coordinates\n4. Connect to Phone hotspot (Defualt Sebastian's Phone's Hotspot)\n5. Connect to any WiFi using WPA2\n6. Test the RGB Lights"+"\n"*2+"(type 1/2/3 etc)"+"\n"*2+"- ")
+if choice=="1":
+    execfile('/flash/LoPyConnect.py')
+if choice=="2":
+    execfile('/flash/sendGPS.py')
+if choice=="3":
+    execfile('/flash/GPSTest.py')
+if choice=="4":
+    execfile('/flash/CTA.py')
+if choice=="5":
+    execfile('/flash/ConnectWIFI.py')
+if choice=="6":
+    execfile('/flash/RGBPARTY.py')
