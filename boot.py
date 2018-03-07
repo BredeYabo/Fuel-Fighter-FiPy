@@ -11,8 +11,11 @@ from utime import ticks_ms as ut
 import os
 uart = UART(0, 115200)
 os.dupterm(uart)
-sd = SD()
-m(sd, '/sd')
+try:
+    sd = SD()
+    m(sd, '/sd')
+except:
+    print("ERROR: Failed to mount SD - Card!")
 hb(False)
 LED_green=0x007f00
 LED_red=0x7f0000
