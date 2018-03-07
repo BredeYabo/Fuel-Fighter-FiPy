@@ -11,13 +11,13 @@ AWS_CLIENT_CERT = '/sd/cert/94f10db729-certificate.pem.crt'
 AWS_PRIVATE_KEY = '/sd/cert/94f10db729-private.pem.key'
 
 ################## Subscribe / Publish client #################
-CLIENT_ID = 'PycomPublishClient'
-TOPIC = 'PublishTopic'
+CLIENT_ID = 'Fuelfighter'
+TOPIC = 'Fuelfighter'
 OFFLINE_QUEUE_SIZE = -1
 DRAINING_FREQ = 2
 CONN_DISCONN_TIMEOUT = 10
 MQTT_OPER_TIMEOUT = 5
-LAST_WILL_TOPIC = 'PublishTopic'
+LAST_WILL_TOPIC = 'Fuelfighter'
 LAST_WILL_MSG = 'To All: Last will message'
 
 ####################### Shadow updater ########################

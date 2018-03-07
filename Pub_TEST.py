@@ -2,7 +2,7 @@ from MQTTLib import AWSIoTMQTTClient
 from network import WLAN
 import time
 import config
-
+LEDRGB(LED_green)
 # Connect to wifi
 wlan = WLAN(mode=WLAN.STA)
 wlan.connect(config.WIFI_SSID, auth=(None, config.WIFI_PASS), timeout=5000)

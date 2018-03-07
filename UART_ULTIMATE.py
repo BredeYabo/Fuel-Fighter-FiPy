@@ -17,13 +17,12 @@
 #bit=(int(g[7:8]))
 from machine import UART
 from machine import SD
-from utime import ticks_ms as t
-from time import sleep as ts
 import os
 sd = SD()
 uart = UART(1, baudrate=500000, pins=('P2','P21'))#NB!TXD=P2, RXD=P21#NB!PIN P2 CONFLICT WITH RGB CONTROL
 print("Files on the SD-Card.\n"+str(os.listdir('/sd')))
-CAN_ID={'110':'Brake','220':'Encoder','230':'Steering_Wheel','310':'Dashboard','440':'BMS_Cell_V_1-4','441':'BMS_Cell_V_5-8','442':'BMS_Cell_V_9-12','443':'BMS_Cell_Temp','444':'BMS_Volt_Current','448':'BMS_State','449':'BMS_Error_Flags','450':'Motor_1_Status','460':'Motor_2_Status','470':'Front_Lights_Status','480':'Rear_Lights_Status'}
+OLD_CAN_ID={'110':'Brake','220':'Encoder','230':'Steering_Wheel','310':'Dashboard','440':'BMS_Cell_V_1-4','441':'BMS_Cell_V_5-8','442':'BMS_Cell_V_9-12','443':'BMS_Cell_Temp','444':'BMS_Volt_Current','448':'BMS_State','449':'BMS_Error_Flags','450':'Motor_1_Status','460':'Motor_2_Status','470':'Front_Lights_Status','480':'Rear_Lights_Status'}
+NEW_CAN_ID={'110':'Dash_Brake','130':'Steering_RegBrake_Throttle','250':'Speed','440':'BMS_Cell_V_1-4','441':'BMS_Cell_V_5-8','442':'BMS_Cell_V_9-12','443':'BMS_Cell_Temp','444':'BMS_Volt_Current','448':'BMS_State','449':'BMS_Error_Flags'}
 #FAKE_NEWS={'130':'Brake','220':'Encoder','240':'Steering_Wheel','305':'Dashboard','440':'BMS_Cell_V_1-4','441':'BMS_Cell_V_5-8','140':'BMS_Cell_V_9-12','210':'BMS_Cell_Temp','150':'BMS_Volt_Current','331':'BMS_State','215':'BMS_Error_Flags','202':'Motor_1_Status','223':'Motor_2_Status','470':'Front_Lights_Status','480':'Rear_Lights_Status'}
 #Initializing values FAKE_NEWS = Simulated fake data
 #Example of data g=r"b'[230:6:00\x0000\x0118\x020B\x0364\x043E\x05]\n"
@@ -52,18 +51,18 @@ def write_sd(filename,data):
     f = open(r"/sd/"+filename+".txt", 'a+')
     f.write(data+"\n")
     f.close()
-int_time=time_c(str(t()))
+int_time=time_c(str(ut()))
 while C<setting:#"while True:" when not testing/when finnished
     g=str(uart.readline())
-    time=time_c(str(t()))
+    time=time_c(str(ut()))
     reason="-00"
     C+=1
     s_try=True
     if g!="None" and g!=temp and g!="":
         try:
-            if len(g)==(13+(int(g[7:8]))*6) and ((int(g[7:8]))%2)==0:
+            if len(g)==(13+(int(g[7:8]))*6) and (int(g[7:8]))==int:
                 data=process(g,time)
-                write_sd(CAN_ID[g[3:6]],data)
+                write_sd(OLD_CAN_ID[g[3:6]],data)
                 temp=g
                 s_try=True
             else:
