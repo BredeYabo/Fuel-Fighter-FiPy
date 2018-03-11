@@ -18,8 +18,8 @@ if choice=="6":
 if choice=="7":
     execfile('/flash/pytrack_acc.py')
 if choice=="8":
-    execfile('/flash/UART_ULTIMATE_2.py')
+    execfile('/flash/UART_3.py')
+    execfile('/flash/UART_4.py')
+    execfile('/flash/UART_5.py')
 if choice=="9":
     execfile('/flash/SD_CARD.py')
-if choice==9:
-    execfile('/flash/UART_ULTIMATE.py')
