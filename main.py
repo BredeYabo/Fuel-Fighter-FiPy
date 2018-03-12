@@ -1,5 +1,9 @@
 #by Sebastian Kleivenes
 print("Pycom up and running!")
+LED(LED_pink_soft)
+ts(5)
+#execfile('/flash/UART_5.py')
+LED(LED_off)
 #print("\n"*3+"Hi, we are up and running!\n")
 #choice=input("What would you like to do?"+"\n"*3+"1. Send a custom message over LoPy\n2. Send GPS coordinates over LoPy\n3. Test for GPS coordinates\n4. Connect to Phone hotspot (Defualt Sebastian's Phone's Hotspot)\n5. Connect to any WiFi using WPA2\n6. Test the RGB Lights\n7. Test the Accelerometer\n8. Run UART_ULTIMATE\n9. Test the SD CARD"+"\n"*2+"(type 1/2/3 etc)"+"\n"*2+"- ")
 choice=99
