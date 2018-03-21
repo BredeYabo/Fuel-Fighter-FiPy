@@ -4,11 +4,11 @@ WIFI_SSID = 'Android'
 WIFI_PASS = '123456789a'
 
 # AWS general configuration
-AWS_PORT = 8883
-AWS_HOST = 'a2tm8m18pdjk7u.iot.us-west-2.amazonaws.com'
-AWS_ROOT_CA = '/flash/cert/aws-root.ca'
-AWS_CLIENT_CERT = '/sd/cert/94f10db729-certificate.pem.crt'
-AWS_PRIVATE_KEY = '/sd/cert/94f10db729-private.pem.key'
+AWS_PORT = 1883
+AWS_HOST = '129.241.91.125'
+# AWS_ROOT_CA = '/flash/cert/aws-root.ca'
+# AWS_CLIENT_CERT = '/sd/cert/94f10db729-certificate.pem.crt'
+# AWS_PRIVATE_KEY = '/sd/cert/94f10db729-private.pem.key'
 
 ################## Subscribe / Publish client #################
 CLIENT_ID = 'Fuelfighter'

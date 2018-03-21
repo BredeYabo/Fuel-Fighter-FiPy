@@ -20,10 +20,8 @@ def customCallback(client, userdata, message):
 	print("--------------\n\n")
 
 # configure the MQTT client
-pycomAwsMQTTClient = AWSIoTMQTTClient(AWSconfig.CLIENT_ID)
+pycomAwsMQTTClient = AWSIoTMQTTClient(AWSconfig.CLIENT_ID, password='ff', user='username')
 pycomAwsMQTTClient.configureEndpoint(AWSconfig.AWS_HOST, AWSconfig.AWS_PORT)
-pycomAwsMQTTClient.configureCredentials(AWSconfig.AWS_ROOT_CA, AWSconfig.AWS_PRIVATE_KEY, AWSconfig.AWS_CLIENT_CERT)
-
 pycomAwsMQTTClient.configureOfflinePublishQueueing(AWSconfig.OFFLINE_QUEUE_SIZE)
 pycomAwsMQTTClient.configureDrainingFrequency(AWSconfig.DRAINING_FREQ)
 pycomAwsMQTTClient.configureConnectDisconnectTimeout(AWSconfig.CONN_DISCONN_TIMEOUT)
@@ -32,7 +30,7 @@ pycomAwsMQTTClient.configureLastWill(AWSconfig.LAST_WILL_TOPIC, AWSconfig.LAST_W
 
 #Connect to MQTT Host
 if pycomAwsMQTTClient.connect():
-    print('AWS connection succeeded')
+    print('connection succeeded')
 
 # Subscribe to topic
 #pycomAwsMQTTClient.subscribe(AWSconfig.TOPIC, 1, customCallback)
