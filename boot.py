@@ -4,6 +4,8 @@ from machine import UART
 from machine import SD
 from os import mount as m
 from os import listdir as ls
+from os import mkdir
+from os import remove
 from pycom import heartbeat as hb
 from pycom import rgbled as LED
 from time import sleep as ts
