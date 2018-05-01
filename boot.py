@@ -11,14 +11,8 @@ from pycom import rgbled as LED
 from time import sleep as ts
 from utime import ticks_ms as ut
 from utime import ticks_cpu as cputime
-import os
 uart = UART(0, 115200)
 os.dupterm(uart)
-try:
-    sd = SD()
-    m(sd, '/sd')
-except:
-    print("\nERROR: Failed to mount SD - Card!")
 hb(False)
 LED_red=0xFF0000
 LED_red_soft=0x110000
@@ -31,3 +25,16 @@ LED_yellow_soft=0x111100
 LED_pink=0xFF00AA
 LED_pink_soft=0x200011
 LED_off=0x000000
+try:
+    sd = SD()
+    m(sd, '/sd')
+except:
+    print("\nERROR: Failed to mount SD - Card!")
+    try:
+        for i in range(10):
+            LED(LED_red)
+            ts(1)
+            LED(LED_off)
+            ts(1)
+    except:
+        pass
