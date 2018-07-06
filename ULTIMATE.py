@@ -1,14 +1,12 @@
 #Created by Sebastian Kleivenes for Fuel Fighter
-#Things in this Version 3, implementation of new CAN data & Server
-#NB: execfile('/flash/UART_3.py')
-#NB! WARNING Accelerometer NOT tested yet with UART, and not included in this version
-#NB! Server to be implemented to this file
+#Version 0.9, Goals for v1.0 is 4G to work, once 4G is working, all critical links in Telemetry is solved, only polishing left to do
+#NB: execfile('/flash/ULTIMATE.py')
 import _thread
 from machine import UART
 from machine import SD
 from utime import ticks_ms as ut
 from time import sleep as ts
-global sd,CAN_COUNT,OLD_CAN_ID,ID_FORMAT_INFO,brake,stw,bmss,brake,bms1,bms2,bms3,bmst,bmsvc,bmsef,mos,mts,s_try,sp,sp2,reason,temp,enco,dashb,frontls,rearls,py,acc,acc_count,acc_file,error_file,os_file,session,CANID,SERVER_DATA
+global sd,CAN_COUNT,OLD_CAN_ID,ID_FORMAT_INFO,brake,stw,bmss,brake,bms1,bms2,bms3,bmst,bmsvc,bmsef,mos,mts,s_try,sp,sp2,reason,temp,enco,dashb,frontls,rearls,py,acc,acc_count,acc_file,error_file,os_file,session,CANID,SERVER_DATA,elcl_1,elcl_2,mcMSG1,mcMSG2
 sd = SD()
 print('Files on the SD-Card.\n'+str(os.listdir('/sd')))
 if "session.txt" in ls('/sd'):
@@ -38,10 +36,15 @@ SERVER_DATA={'0':0,#Time (s)
         '7':0,#BMS ERROR FLAG: OverTemp (True/False)
         '8':0,#BMS ERROR FLAG: NoDataOnStartup (True/False)
         '9':0,#BMS Battery Current
-        '10':0}#BMS Battery Voltage
+        '10':0}#BMS Battery Voltage#NB Not in use!
 OLD_CAN_ID={'110':'Brake',
-            '220':'Encoder',
+            '120':'Electric_Clutch_1',
+            '220':'Electric_Clutch_2',
             '230':'Steering_Wheel',
+            '250':'Motor_1_Status',
+            '251':'Motor_1_MSG',
+            '260':'Motor_2_Status',
+            '261':'Motor_2_MSG',
             '310':'Dashboard',
             '440':'BMS_Cell_V_1_4',
             '441':'BMS_Cell_V_5_8',
@@ -50,16 +53,19 @@ OLD_CAN_ID={'110':'Brake',
             '444':'BMS_Volt_Current',
             '448':'BMS_State',
             '449':'BMS_Error_Flags',
-            '450':'Motor_1_Status',
-            '460':'Motor_2_Status',
             '470':'Front_Lights_Status',
             '480':'Rear_Lights_Status',
             'acc':'Accelerometer',
             'error':'ERROR',
             'os':'RUN_INFO'}
 ID_FORMAT_INFO={'110':'Time, Brake',
-            '220':'Time, Motor1RPM, Motor2RPM, CarRPM, Velocity',
+            '120':'Time, Motor Speed (RPM), Clutch Status (0/1/2)',
+            '220':'Time, Motor Speed (RPM), Clutch Status (0/1/2)',
             '230':'Time, GearOne, GearTwo, GearType',
+            '250':'Time, Motor1StatusByte, Current (A), Bat-volt (V), Used energy (kJ), Speed (km/h), Motor Temp',
+            '251':'Time, Gear Required (0/1/2)',
+            '260':'Time, Motor2StatusByte, Current (A), Bat-volt (V), Used energy (kJ), Speed (km/h), Motor Temp',
+            '261':'Time, Gear Required (0/1/2)',
             '310':'Time, Lights, Hazards, Lap, LightLevel, WinWiperLevel, WinWiperState',
             '440':'Time, Cell_V1, V2, V3, V4',
             '441':'Time, Cell_V5, V6, V7, V8',
@@ -68,16 +74,19 @@ ID_FORMAT_INFO={'110':'Time, Brake',
             '444':'Time, BatCurrent, BatVoltage',
             '448':'Time, State',
             '449':'Time, PreChargeTimeout, LTC_LossOfSignal, OverVoltage, UnderVoltage, OverCurrent, OverTemp, NoDataOnStartup',
-            '450':'Time, Motor1Status, Throttle, Current, PWM',
-            '460':'Time, Motor2Status, Throttle, Current, PWM',
             '470':'Time, HeadlightLvl, HeadlightState, Blinker(Left/Right)=T/F, Hazards',
             '480':'Time, RearLightLvl, RearLightState, Blinker(Left/Right)=T/F, Hazards, Brakelights',
             'acc':'Time, Pitch, Roll',
             'error':'Time, Input, Error Reason',
             'os':'# of None, Time of Start, Time of End, Delta Time, Setting, Failed, Successes'}
 CAN_COUNT={'110':-1,
+            '120':-1,
             '220':-1,
             '230':-1,
+            '250':-1,
+            '251':-1,
+            '260':-1,
+            '261':-1,
             '310':-1,
             '440':-1,
             '441':-1,
@@ -86,8 +95,6 @@ CAN_COUNT={'110':-1,
             '444':-1,
             '448':-1,
             '449':-1,
-            '450':-1,
-            '460':-1,
             '470':-1,
             '480':-1,
             'acc':-1,
@@ -107,6 +114,10 @@ if True:
     bmsef=None
     mos=None
     mts=None
+    mcMSG1=None
+    mcMSG2=None
+    elcl_1=None
+    elcl_2=None
     s_try=True
     l_count=0
     enco=None
@@ -124,8 +135,8 @@ if True:
     acc_file=None
     error_file=None
     server_count=None
-setting=750#How many runs to do 1h~=50 000 but this varied wildly
-USE_SERVER=True
+setting=100000#How many runs to do 1h~=50 000 but this varied wildly
+USE_SERVER=False
 def send_server():
     global sd
     from network import WLAN
@@ -178,11 +189,11 @@ def calculateVelocity(RPM):
 def calculateKmh(velocity):
 	return velocity*3.6
 def store(r_v):
-    global sd,CAN_COUNT,OLD_CAN_ID,ID_FORMAT_INFO,brake,stw,bmss,brake,bms1,bms2,bms3,bmst,bmsvc,bmsef,mos,mts,s_try,sp,sp2,reason,temp,enco,dashb,frontls,rearls,py,acc,acc_count,acc_file,error_file,os_file,session
+    global sd,CAN_COUNT,OLD_CAN_ID,ID_FORMAT_INFO,brake,stw,bmss,brake,bms1,bms2,bms3,bmst,bmsvc,bmsef,mos,mts,s_try,sp,sp2,reason,temp,enco,dashb,frontls,rearls,py,acc,acc_count,acc_file,error_file,os_file,session,elcl_1,elcl_2,mcMSG1,mcMSG2
     CAN_COUNT[CANID]+=1
     filename=OLD_CAN_ID[CANID]
-    linje=CAN_COUNT[CANID]//500
-    rest=CAN_COUNT[CANID]-(linje*500)
+    linje=CAN_COUNT[CANID]//50
+    rest=CAN_COUNT[CANID]-(linje*50)
     name=str(filename+sp2+str(linje)+'.csv')
     place=r'/sd/'+str(session)
     if rest==0:
@@ -195,19 +206,25 @@ def store(r_v):
     if name in ls(place) and CANID=='os':
         temp.write(r_v+'\n')
 def process(Data):
-    global sd,CAN_COUNT,OLD_CAN_ID,ID_FORMAT_INFO,brake,stw,bmss,brake,bms1,bms2,bms3,bmst,bmsvc,bmsef,mos,mts,s_try,sp,sp2,reason,temp,enco,dashb,frontls,rearls,py,acc,acc_count,acc_file,error_file,os_file,session,SERVER_DATA
+    global sd,CAN_COUNT,OLD_CAN_ID,ID_FORMAT_INFO,brake,stw,bmss,brake,bms1,bms2,bms3,bmst,bmsvc,bmsef,mos,mts,s_try,sp,sp2,reason,temp,enco,dashb,frontls,rearls,py,acc,acc_count,acc_file,error_file,os_file,session,SERVER_DATA,elcl_1,elcl_2,mcMSG1,mcMSG2
     ID=OLD_CAN_ID[CANID]
     if ID == 'Brake':#Brake Engaged
         r_v=str(int(Data[0],16))
         temp=brake
         store(r_v)
         brake=temp
-    elif ID == 'Encoder':#Motor1RPM : Motor2RPM : CarRPM : Velocity
-        Velocity = calculateVelocity(int(Data[5] + Data[4], 16))
-        r_v = str(int(Data[1] + Data[0], 16))+':'+str(int(Data[3] + Data[2], 16))+':'+str(int(Data[5] + Data[4], 16))+':'+str(Velocity)
-        temp=enco
-        store(r_v)
-        enco=temp
+    elif ID == 'Electric_Clutch_1' or ID == 'Electric_Clutch_2':#Motor speed (RPM) : Clutch Status (0/1/2)
+        MotorRPM = int(Data[1] + Data[0], 16)
+        ClutchStatus = int(Data[2], 16)
+        r_v = str(MotorRPM)+sp+str(ClutchStatus)
+        if ID == 'Electric_Clutch_1':
+            temp=elcl_1
+            store(r_v)
+            elcl_1=temp
+        if ID == 'Electric_Clutch_2':
+            temp=elcl_2
+            store(r_v)
+            elcl_2=temp
     elif ID == 'Steering_Wheel':#GearOne : GearTwo : GearType
         ThrottleRight = int(Data[3], 16)
         ThrottleLeft = int(Data[2], 16)
@@ -221,9 +238,9 @@ def process(Data):
         else:
             GearTwo = False
         if buttons & 0b100:
-            GearType = Auto
+            GearType = "Auto"
         else:
-            GearType = Manual
+            GearType = "Manual"
         r_v=str(GearOne)+sp+str(GearTwo)+sp+str(GearType)
         temp=stw
         store(r_v)
@@ -245,7 +262,7 @@ def process(Data):
         Light_Level = int(Data[1],16)
         WindowWiper_Level = int(Data[2],15)
 
-        if WindowWiper_Level >= 6:
+        if WindowWiper_Level > 5:
             WindowWiper_State = True
         else:
             WindowWiper_State = False
@@ -343,20 +360,32 @@ def process(Data):
         temp=bmsef
         store(r_v)
         bmsef=temp
-    elif ID == 'Motor_1_Status' or ID == 'Motor_2_Status':#Motor1Status : Throttle : Current : PWM#Motor2Status : Throttle : Current : PWM
-        status = int(Data[0],16)
-        Throttle = int(Data[1], 16)
-        Current = int(Data[2] + Data[3], 16)
-        PWM = int(Data[4] + Data[5], 16)
-        if status == 0:
-            status_r = 'Idle'
-        elif status == 1:
-            status_r = 'Running'
-        elif status == 2:
-            status_r = 'Overload'
-        else:
-            status_r = 'Error obtaining status'
-        r_v=str(status_r)+sp+str(Throttle)+sp+str(Current)+sp+str(PWM)
+    elif ID == 'Motor_1_Status' or ID == 'Motor_2_Status':#MotorStatusByte OFF : ACC : BRAKE : IDLE : ERROR : Current (A) : Bat-volt (V) : Used energy (kJ) : Speed (km/h) : Motor Temp
+        MotorStatusByte = int(Data[0],16)
+        if MotorStatusByte == 0:
+            MSB = 'OFF'
+        elif MotorStatusByte == 1:
+            MSB = 'ACC'
+        elif MotorStatusByte == 2:
+            MSB = 'BRAKE'
+        elif MotorStatusByte == 3:
+            MSB = 'IDLE'
+        elif MotorStatusByte == 4:
+            MSB = 'ERROR'
+        elif MotorStatusByte == 5:
+            MSB = 'ENGAGE'
+        M_Current = (int(Data[1], 16))
+        try:
+            if M_Current>127:
+                M_Current-=256
+            M_Current=M_Current/10
+        except:
+            M_Current=M_Current/10
+        M_Volt = (int(Data[3] + Data[2], 16))/10
+        M_Energy = (int(Data[5] + Data[4], 16))/100
+        M_Speed = (int(Data[6], 16))/5
+        M_Temp = int(Data[7], 16)
+        r_v=str(MSB)+sp+str(M_Current)+sp+str(M_Volt)+sp+str(M_Energy)+sp+str(M_Speed)+sp+str(M_Temp)
         if ID == 'Motor_1_Status':
             temp=mos
             store(r_v)
@@ -365,6 +394,17 @@ def process(Data):
             temp=mts
             store(r_v)
             mts=temp
+    elif ID == 'Motor_1_MSG' or ID == 'Motor_2_MSG':#Gear Required (0/1/2)
+        GearRequired = int(Data[0],16)
+        r_v=str(GearRequired)
+        if ID == 'Motor_1_MSG':
+            temp=mcMSG1
+            store(r_v)
+            mcMSG1=temp
+        if ID == 'Motor_2_MSG':
+            temp=mcMSG2
+            store(r_v)
+            mcMSG2=temp
     elif ID == 'Front_Lights_Status' or ID == 'Rear_Lights_Status':#HeadlightLvl : HeadlightState : Blinker(Left/Right)=T/F : Hazards // #RearLightLvl : RearLightState : Blinker(Left/Right)=T/F : Hazards:Brakelights
         Light_level = int(Data[1],16)
         states = int(Data[0],16)
@@ -399,7 +439,7 @@ def process(Data):
     else:
         pass
 def qualityControl(g):#Checks Integrity of data
-    global sd,CAN_COUNT,OLD_CAN_ID,ID_FORMAT_INFO,brake,stw,bmss,brake,bms1,bms2,bms3,bmst,bmsvc,bmsef,mos,mts,s_try,sp,sp2,reason,temp,enco,dashb,frontls,rearls,py,acc,acc_count,acc_file,error_file,os_file,session,CANID
+    global sd,CAN_COUNT,OLD_CAN_ID,ID_FORMAT_INFO,brake,stw,bmss,brake,bms1,bms2,bms3,bmst,bmsvc,bmsef,mos,mts,s_try,sp,sp2,reason,temp,enco,dashb,frontls,rearls,py,acc,acc_count,acc_file,error_file,os_file,session,CANID,elcl_1,elcl_2,mcMSG1,mcMSG2
     try:
         g=g.decode('ascii')
         try:
@@ -433,7 +473,8 @@ def qualityControl(g):#Checks Integrity of data
         s_try=False
     return False
 int_time=time_c(str(ut()))
-_thread.start_new_thread(send_server,())
+if USE_SERVER==True:
+    _thread.start_new_thread(send_server,())
 while C<setting:
     time=ut()
     rtime=time//1000

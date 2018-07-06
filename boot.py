@@ -26,12 +26,14 @@ LED_pink=0xFF00AA
 LED_pink_soft=0x200011
 LED_off=0x000000
 try:
+    SDMOUNTED=True
     sd = SD()
     m(sd, '/sd')
 except:
+    SDMOUNTED=False
     print("\nERROR: Failed to mount SD - Card!")
     try:
-        for i in range(10):
+        for i in range(4):
             LED(LED_red)
             ts(1)
             LED(LED_off)

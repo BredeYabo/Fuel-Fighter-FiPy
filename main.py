@@ -2,8 +2,17 @@
 print("\n\nPycom up and running!\n")
 LED(LED_pink_soft)
 ts(1)
-#execfile('/flash/UART_1.py')
-#execfile('/flash/mqttFF.py')
 LED(LED_off)
-ts(3)
-#execfile('/sd/UART_U.py')
+ts(1)
+LED(LED_pink_soft)
+ts(1)
+LED(LED_off)
+ts(1)
+if SDMOUNTED==True:
+    LED(LED_pink_soft)
+    ts(7)
+    LED(LED_off)
+    execfile('/flash/ULTIMATE.py')
+else:
+    pass
+print("\n\n░░░░░░░░░░░░░░░▄▄░░░░░░░░░░░\n░░░░░░░░░░░░░░█░░█░░░░░░░░░░\n░░░░░░░░░░░░░░█░░█░░░░░░░░░░\n░░░░░░░░░░░░░░█░░█░░░░░░░░░░\n░░░░░░░░░░░░░░█░░█░░░░░░░░░░\n██████▄███▄████░░███▄░░░░░░░\n▓▓▓▓▓▓█░░░█░░░█░░█░░░███░░░░\n▓▓▓▓▓▓█░░░█░░░█░░█░░░█░░█░░░\n▓▓▓▓▓▓█░░░░░░░░░░░░░░█░░█░░░\n▓▓▓▓▓▓█░░░░░░░░░░░░░░░░█░░░░\n▓▓▓▓▓▓█░░░░░░░░░░░░░░██░░░░░\n▓▓▓▓▓▓█████░░░░░░░░██░░░░░░\n\n")
