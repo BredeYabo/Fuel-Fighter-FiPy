@@ -1,5 +1,4 @@
 #Created by Sebastian Kleivenes for Fuel Fighter
-#Version 0.9, Goals for v1.0 is 4G to work, once 4G is working, all critical links in Telemetry is solved, only polishing left to do
 #NB: execfile('/flash/ULTIMATE.py')
 import _thread
 from machine import UART
